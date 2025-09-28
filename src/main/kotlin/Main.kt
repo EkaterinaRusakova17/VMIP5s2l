@@ -1,16 +1,38 @@
-package org.example
+import models.*
+import services.*
+import utils.ArgsParser
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
-fun main() {
-    val name = "Kotlin"
-    //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-    // to see how IntelliJ IDEA suggests fixing it.
-    println("Hello, " + name + "!")
+fun main(args: Array<String>) {
+    val argsParser = ArgsParser(args)
 
-    for (i in 1..5) {
-        //TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-        // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-        println("i = $i")
+    if (argsParser.shouldShowHelp()) {
+        argsParser.showHelp()
+        kotlin.system.exitProcess(1)
     }
+
+    if (!argsParser.validateArgs()) {
+        argsParser.showHelp()
+        kotlin.system.exitProcess(1)
+    }
+
+    val authService = AuthService(HashService())
+    val resourceService = ResourceService()
+    
+    val authResult = authService.authenticate(
+        argsParser.login!!,
+        argsParser.password!!
+    )
+
+    if (authResult != 0) {
+        kotlin.system.exitProcess(authResult)
+    }
+    
+    val accessResult = resourceService.checkAccess(
+        argsParser.login!!,
+        argsParser.resource!!,
+        argsParser.action!!,
+        argsParser.volume!!
+    )
+
+    kotlin.system.exitProcess(accessResult)
 }
